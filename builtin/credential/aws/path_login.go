@@ -185,8 +185,8 @@ func (b *backend) pathLoginUpdate(
 	}
 
 	// Allowing the lengh of UUID for a client nonce.
-	if len(clientNonce) > 36 {
-		return logical.ErrorResponse("client nonce exceeding the limit of 36 characters"), nil
+	if len(clientNonce) > 128 {
+		return logical.ErrorResponse("client nonce exceeding the limit of 128 characters"), nil
 	}
 
 	// Validate the instance ID.
@@ -322,7 +322,7 @@ func fetchRoleTagValue(s logical.Storage, tagKey string) (string, error) {
 	return *tagsOutput.Tags[0].Value, nil
 }
 
-// handleRoleTagLogin is used to fetch the role tag if the instance and verifies it to be correct.
+// handleRoleTagLogin is used to fetch the role tag of the instance and verifies it to be correct.
 // Then the policies for the login request will be set off of the role tag, if certain creteria satisfies.
 func handleRoleTagLogin(s logical.Storage, identityDoc *identityDocument, imageEntry *awsImageEntry) (*roleTagLoginResponse, error) {
 
