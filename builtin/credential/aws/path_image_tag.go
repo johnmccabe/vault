@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/vault/helper/policyutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 )
 
 const roleTagVersion = "v1"
@@ -60,7 +61,7 @@ func (b *backend) pathImageTagUpdate(
 
 	imageID := strings.ToLower(data.Get("ami_id").(string))
 	if imageID == "" {
-		return logical.ErrorResponse("missing ami_id"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing ami_id"}
 	}
 
 	// Parse the given policies into a slice and add 'default' if not provided.
@@ -103,7 +104,7 @@ func (b *backend) pathImageTagUpdate(
 	}
 
 	if maxTTL < time.Duration(0) {
-		return logical.ErrorResponse("max_ttl cannot be negative"), nil
+		return nil, &vault.StatusBadRequest{Err: "max_ttl cannot be negative"}
 	}
 
 	// Attach version, nonce, policies and maxTTL to the role tag value.

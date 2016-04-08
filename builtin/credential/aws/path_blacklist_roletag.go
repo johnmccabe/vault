@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 )
 
 func pathBlacklistRoleTag(b *backend) *framework.Path {
@@ -86,7 +87,7 @@ func (b *backend) pathBlacklistRoleTagDelete(
 
 	tag := data.Get("role_tag").(string)
 	if tag == "" {
-		return logical.ErrorResponse("missing role_tag"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing role_tag"}
 	}
 
 	err := req.Storage.Delete("blacklist/roletag/" + tag)
@@ -103,7 +104,7 @@ func (b *backend) pathBlacklistRoleTagRead(
 
 	tag := data.Get("role_tag").(string)
 	if tag == "" {
-		return logical.ErrorResponse("missing role_tag"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing role_tag"}
 	}
 
 	entry, err := blacklistRoleTagEntry(req.Storage, tag)
@@ -131,7 +132,7 @@ func (b *backend) pathBlacklistRoleTagUpdate(
 	// The role_tag value provided, optionally can be base64 encoded.
 	tagInput := data.Get("role_tag").(string)
 	if tagInput == "" {
-		return logical.ErrorResponse("missing role_tag"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing role_tag"}
 	}
 
 	tag := ""

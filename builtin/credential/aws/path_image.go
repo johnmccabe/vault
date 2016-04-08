@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/vault/helper/policyutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 )
 
 func pathImage(b *backend) *framework.Path {
@@ -154,7 +155,7 @@ func (b *backend) pathImageCreateUpdate(
 
 	imageID := strings.ToLower(data.Get("ami_id").(string))
 	if imageID == "" {
-		return logical.ErrorResponse("missing ami_id"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing ami_id"}
 	}
 
 	imageEntry, err := awsImage(req.Storage, imageID)
@@ -195,7 +196,7 @@ func (b *backend) pathImageCreateUpdate(
 		}
 
 		if maxTTL < time.Duration(0) {
-			return logical.ErrorResponse("max_ttl cannot be negative"), nil
+			return nil, &vault.StatusBadRequest{Err: "max_ttl cannot be negative"}
 		}
 
 		imageEntry.MaxTTL = maxTTL

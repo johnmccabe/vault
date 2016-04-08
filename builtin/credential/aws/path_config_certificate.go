@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 )
 
 // dsaSignature represents the contents of the signature of a signed
@@ -174,7 +175,7 @@ func (b *backend) pathConfigCertificateCreateUpdate(
 
 	// If explicitly set to empty string, error out.
 	if certEntry.AWSPublicCert == "" {
-		return logical.ErrorResponse("missing aws_public_cert"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing aws_public_cert"}
 	}
 
 	// Verify the certificate by decoding it and parsing it.

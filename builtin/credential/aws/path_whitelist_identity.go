@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 )
 
 func pathWhitelistIdentity(b *backend) *framework.Path {
@@ -88,7 +89,7 @@ func (b *backend) pathWhitelistIdentityDelete(
 
 	instanceID := data.Get("instance_id").(string)
 	if instanceID == "" {
-		return logical.ErrorResponse("missing instance_id"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing instance_id"}
 	}
 
 	err := req.Storage.Delete("whitelist/identity/" + instanceID)
@@ -104,7 +105,7 @@ func (b *backend) pathWhitelistIdentityRead(
 	req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	instanceID := data.Get("instance_id").(string)
 	if instanceID == "" {
-		return logical.ErrorResponse("missing instance_id"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing instance_id"}
 	}
 
 	entry, err := whitelistIdentityEntry(req.Storage, instanceID)

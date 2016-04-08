@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/vault"
 	"github.com/vishalnayak/pkcs7"
 )
 
@@ -68,7 +69,7 @@ func validateMetadata(clientNonce, pendingTime string, storedIdentity *whitelist
 	// If reauthentication is disabled, doesn't matter what other metadata is provided,
 	// authentication will not succeed.
 	if storedIdentity.DisallowReauthentication {
-		return fmt.Errorf("reauthentication is disabled")
+		return &vault.StatusBadRequest{Err: "reauthentication is disabled"}
 	}
 
 	givenPendingTime, err := time.Parse(time.RFC3339, pendingTime)
@@ -99,10 +100,10 @@ func validateMetadata(clientNonce, pendingTime string, storedIdentity *whitelist
 	// should be used with caution.
 	if clientNonce != storedIdentity.ClientNonce {
 		if !imageEntry.AllowInstanceMigration {
-			return fmt.Errorf("client nonce mismatch")
+			return &vault.StatusBadRequest{Err: "client nonce mismatch"}
 		}
 		if imageEntry.AllowInstanceMigration && !givenPendingTime.After(storedPendingTime) {
-			return fmt.Errorf("client nonce mismatch and instance meta-data incorrect")
+			return &vault.StatusBadRequest{Err: "client nonce mismatch and instance meta-data incorrect"}
 		}
 	}
 
@@ -174,7 +175,7 @@ func (b *backend) pathLoginUpdate(
 	pkcs7B64 := data.Get("pkcs7").(string)
 
 	if pkcs7B64 == "" {
-		return logical.ErrorResponse("missing pkcs7"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing pkcs7"}
 	}
 
 	// Verify the signature of the identity document.
@@ -272,12 +273,12 @@ func (b *backend) pathLoginUpdate(
 	// Performing the clientNonce empty check after determining the DisallowReauthentication
 	// option. This is to make clientNonce optional when DisallowReauthentication is set.
 	if clientNonce == "" && !storedIdentity.DisallowReauthentication {
-		return logical.ErrorResponse("missing nonce"), nil
+		return nil, &vault.StatusBadRequest{Err: "missing nonce"}
 	}
 
 	// Limit the nonce to a reasonable length.
 	if len(clientNonce) > 128 && !storedIdentity.DisallowReauthentication {
-		return logical.ErrorResponse("client nonce exceeding the limit of 128 characters"), nil
+		return nil, &vault.StatusBadRequest{Err: "client nonce exceeding the limit of 128 characters"}
 	}
 
 	if err = setWhitelistIdentityEntry(req.Storage, identityDoc.InstanceID, storedIdentity); err != nil {
